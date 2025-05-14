@@ -50,7 +50,7 @@ Quiero que esta página sea lo más precisa posible para que todos puedan ver y 
 
 # Almacenamiento en caché de funciones en HUDPaint
 
-TL;DR: Si usas una función frecuentemente en un hook HUDPaint (como LocalPlayer()), recomiendo almacenarla en caché al principio.
+Resumen: Si usas una función frecuentemente en un hook HUDPaint (como LocalPlayer()), recomiendo almacenarla en caché al principio.
 
 Esta es una comparación de los siguientes fragmentos de código. La pregunta es: "¿Deberías almacenar en caché una función que solo usas 3 veces?".
 
@@ -82,7 +82,7 @@ Código: [files/hudpaint_3call_cache.lua](files/hudpaint_3call_cache.lua)
 
 # Almacenamiento en caché de la función LocalPlayer
 
-TL;DR: Es más rápido almacenar en caché el resultado de `LocalPlayer()` y sobrescribir la función para que siempre devuelva este valor.
+Resumen: Es más rápido almacenar en caché el resultado de `LocalPlayer()` y sobrescribir la función para que siempre devuelva este valor.
 
 Es bastante autoexplicativo. `LocalPlayer()` siempre te devuelve a ti (el jugador), pero toma más tiempo que si simplemente almacenaras la entidad del jugador en caché y la devolvieras cada vez.  
 Revisa el código para más información.
@@ -101,7 +101,7 @@ Código: [files/localplayer_cache.lua](files/localplayer_cache.lua)
 
 # Almacenamiento en caché de LocalPlayer con "or"
 
-TL;DR: Es ligeramente más rápido usar "ply = ply or LocalPlayer()" que usar siempre LocalPlayer(), pero la ganancia de tiempo es casi imperceptible.
+Resumen: Es ligeramente más rápido usar "ply = ply or LocalPlayer()" que usar siempre LocalPlayer(), pero la ganancia de tiempo es casi imperceptible.
 
 Bastante autoexplicativo. Esto almacena LocalPlayer() en la primera ejecución y luego reutiliza ese valor.  
 Consulta el código para más información.
@@ -120,7 +120,7 @@ Código: [files/localplayer_cached_or.lua](files/localplayer_cached_or.lua)
 
 # Angle:Zero() vs Angle() nuevo
 
-TL;DR: Es más rápido reutilizar el mismo objeto Angle y reiniciarlo a cero antes de usarlo que crear un nuevo objeto Angle cada vez.
+Resumen: Es más rápido reutilizar el mismo objeto Angle y reiniciarlo a cero antes de usarlo que crear un nuevo objeto Angle cada vez.
 
 El wiki lo establece como un hecho, y es cierto. Te ahorra la sobrecarga de crear un nuevo objeto y recolectar el anterior.  
 Consulta el código para más información.
@@ -144,7 +144,7 @@ Código: [files/angle_zero_vs_new.lua](files/angle_zero_vs_new.lua)
 
 # Almacenamiento en caché de función SteamID
 
-TL;DR: Es más rápido almacenar en caché el resultado de `ply:SteamID()` y sobrescribir la función para que siempre devuelva este valor para un jugador desde una tabla de caché.
+Resumen: Es más rápido almacenar en caché el resultado de `ply:SteamID()` y sobrescribir la función para que siempre devuelva este valor para un jugador desde una tabla de caché.
 
 Bastante autoexplicativo. Igual que "Almacenamiento en caché de función LocalPlayer" mencionado anteriormente.
 
@@ -167,7 +167,7 @@ Código: [files/steamid_cache.lua](files/steamid_cache.lua)
 
 # GetNWString vs getDarkRPVar
 
-TL;DR: getDarkRPVar siempre es más rápido en el servidor, mientras que en el cliente parece ser aleatorio. Recomendaría usar getDarkRPVar, ya que está más optimizado para el uso de red en comparación con el tráfico constante de red cada 10 segundos de NW1.
+Resumen: getDarkRPVar siempre es más rápido en el servidor, mientras que en el cliente parece ser aleatorio. Recomendaría usar getDarkRPVar, ya que está más optimizado para el uso de red en comparación con el tráfico constante de red cada 10 segundos de NW1.
 
 Esta es una comparación entre `ply:GetNWString("job")` y `ply:getDarkRPVar("job")`.
 
@@ -192,7 +192,7 @@ Código: [files/nwvar_vs_darkrpvar.lua](files/nwvar_vs_darkrpvar.lua)
 
 # Tabla de Configuración vs Variable
 
-TL;DR: Usar una tabla es más lento que usar una variable.
+Resumen: Usar una tabla es más lento que usar una variable.
 
 Esta es una comparación entre usar una tabla de configuración como `myaddon.config.color =` y una simple variable como `myaddon_config_color =`. Esto existe principalmente porque algunas personas no me creen.
 
@@ -240,7 +240,7 @@ Código: [files/table_vs_variable.lua](files/table_vs_variable.lua)
 
 # pairs vs ipairs vs for i=1
 
-TL;DR: No son tan diferentes como la gente cree. Pairs es más lento porque también funciona con tablas no secuenciales.
+Resumen: No son tan diferentes como la gente cree. Pairs es más lento porque también funciona con tablas no secuenciales.
 
 Resultados (10 pruebas de 100 ejecuciones cada una, calculando la suma de una tabla de 10,000 números):
 
@@ -255,7 +255,7 @@ Código: [files/pairs_vs_ipairs_vs_for.lua](files/pairs_vs_ipairs_vs_for.lua)
 
 # Comparación de iteradores para player.GetAll()
 
-TL;DR: El más rápido es el Iterador, pero yo (y el wiki) no lo recomendaría porque es propenso a errores. Usar ipairs es una forma muy legible, fácil de usar y rápida de iterar sobre todos los jugadores.
+Resumen: El más rápido es el Iterador, pero yo (y el wiki) no lo recomendaría porque es propenso a errores. Usar ipairs es una forma muy legible, fácil de usar y rápida de iterar sobre todos los jugadores.
 
 Resultados:
 
@@ -270,7 +270,7 @@ Código: [files/player_getall_compare.lua](files/player_getall_compare.lua)
 
 # Iteración en tablas de strings vs números
 
-TL;DR: Las tablas indexadas numéricamente y secuenciales son siempre más rápidas gracias a que ipairs y los bucles for pueden optimizar la iteración. No hay diferencia en velocidad según la longitud de los strings usados como índice. Las tablas con números secuenciales son más rápidas que las no secuenciales.
+Resumen: Las tablas indexadas numéricamente y secuenciales son siempre más rápidas gracias a que ipairs y los bucles for pueden optimizar la iteración. No hay diferencia en velocidad según la longitud de los strings usados como índice. Las tablas con números secuenciales son más rápidas que las no secuenciales.
 
 Con una tabla de 100 elementos y 1000 ejecuciones para cada una de las 5 pruebas:
 
@@ -288,7 +288,7 @@ Código: [files/string_vs_number_table.lua](files/string_vs_number_table.lua)
 
 # Distance vs DistToSqr
 
-TL;DR: La diferencia de tiempo entre Distance y DistToSqr es casi imperceptible.
+Resumen: La diferencia de tiempo entre Distance y DistToSqr es casi imperceptible.
 
 Resultados (promedio de 10000 cálculos):
 
@@ -301,7 +301,7 @@ Código: [files/distance_vs_disttosqr.lua](files/distance_vs_disttosqr.lua)
 
 # Operador ternario vs if
 
-TL;DR: Toman la misma cantidad de tiempo. La diferencia fluctúa aleatoriamente con variaciones mínimas en cada prueba.
+Resumen: Toman la misma cantidad de tiempo. La diferencia fluctúa aleatoriamente con variaciones mínimas en cada prueba.
 
 Pruebas realizadas:  
 `a = t and 7 or 1` vs `a=1 if t then a=7 end`
@@ -317,7 +317,7 @@ Código: [files/ternary_vs_if.lua](files/ternary_vs_if.lua)
 
 # table.insert vs asignación directa
 
-TL;DR: La diferencia de tiempo entre usar `table.insert(myTable,9)` y `myTable[#myTable+1] = 9` es casi imperceptible, ya que los resultados fueron prácticamente idénticos (incluso probado en consola Lua5.3).
+Resumen: La diferencia de tiempo entre usar `table.insert(myTable,9)` y `myTable[#myTable+1] = 9` es casi imperceptible, ya que los resultados fueron prácticamente idénticos (incluso probado en consola Lua5.3).
 
 Resultados (insertando 1 millón de valores):
 
@@ -331,7 +331,7 @@ Código: [files/table.insert_vs_table.lua](files/table.insert_vs_table.lua)
 
 # table.HasValue(table,x) vs table[x]
 
-TL;DR: Verificar directamente la clave de la tabla con table[valor] es mucho más rápido.
+Resumen: Verificar directamente la clave de la tabla con table[valor] es mucho más rápido.
 
 Resultados (1 millón de búsquedas):
 
@@ -350,7 +350,7 @@ Para aprender más sobre la "Notación Big O" visita, por ejemplo: [https://web.
 
 # table.Empty(tab) vs tab = {}
 
-TL;DR: Asignar una nueva tabla vacía es generalmente más rápido que vaciar una existente.
+Resumen: Asignar una nueva tabla vacía es generalmente más rápido que vaciar una existente.
 
 La siguiente prueba compara tablas pequeñas (10 elementos) y grandes (10,000) con cada método. También diferencia entre tablas numéricas (claves 1,2,3,...) y tablas con índices string (claves a,b,c,...).  
 Resultados:
@@ -378,7 +378,7 @@ Código: [files/table_empty_vs_new.lua](files/table_empty_vs_new.lua)
 
 # ply:IsDoing() vs IsDoing(ply)
 
-TL;DR: No usar metatables es más rápido.
+Resumen: No usar metatables es más rápido.
 
 Esta es una comparación entre usar la MetaTable PLAYER versus simplemente pasar el jugador como argumento.
 
@@ -396,7 +396,7 @@ Código: [files/meta_vs_argument.lua](files/meta_vs_argument.lua)
 
 # Concatenación de Strings vs Tabla de Concatenación
 
-TL;DR: Es más rápido unir strings mediante tablas que concatenarlos directamente.
+Resumen: Es más rápido unir strings mediante tablas que concatenarlos directamente.
 
 Resultados (10000 strings):
 
@@ -413,7 +413,7 @@ Código: [files/string_vs_table_concat.lua](files/string_vs_table_concat.lua)
 
 # string.format vs concatenación (..)
 
-TL;DR: Ambos tienen casi la misma velocidad de ejecución. Varía entre cuál es más rápido en cada ejecución, están tan cerca.  
+Resumen: Ambos tienen casi la misma velocidad de ejecución. Varía entre cuál es más rápido en cada ejecución, están tan cerca.  
 Lo que es mejor depende del caso de uso, recomiendo usar `string.format` para casos donde la entrada no es fija, porque con esta función puedes añadir entidades/jugadores sin tener que convertirlos a string explícitamente.
 
 Esta es una comparación de las 2 formas de crear un string único a partir de múltiples partes, ya sea con string.format o con `..` entre los argumentos. Ejemplo:
@@ -441,7 +441,7 @@ El código: [files/string_format_vs_concat.lua](files/string_format_vs_concat.lu
 
 # surface.DrawText vs draw.DrawText
 
-TL;DR: Usar `draw.SimpleText` es casi tan rápido como usar las funciones `surface.*`. DrawText es un poco más lento y SimpleTextOutlined es, por mucho, el más lento.
+Resumen: Usar `draw.SimpleText` es casi tan rápido como usar las funciones `surface.*`. DrawText es un poco más lento y SimpleTextOutlined es, por mucho, el más lento.
 
 Esta prueba simplemente dibuja una palabra en 3 coordenadas diferentes en tu pantalla con 4 funciones diferentes y mide el tiempo tomado.  
 Resultado:
@@ -459,7 +459,7 @@ El código: [files/surface_vs_draw_text.lua](files/surface_vs_draw_text.lua)
 
 # file.Read vs sql.Query
 
-TL;DR: Usar file.Read es un poco más rápido, pero apenas hay diferencia entre los 2 métodos.
+Resumen: Usar file.Read es un poco más rápido, pero apenas hay diferencia entre los 2 métodos.
 
 Si quieres guardar texto y recuperarlo después, ¿qué método es más rápido? ¿Guardarlo en un archivo y leerlo o guardarlo en sqlite y leerlo?  
 Resultado:
@@ -478,7 +478,7 @@ El código: [files/file_vs_sql_text.lua](files/file_vs_sql_text.lua)
 
 # sql.Query vs QueryRow vs QueryValue
 
-TL;DR: No son comparables ya que Query es una función en C y las otras son funciones en LUA que lo utilizan.
+Resumen: No son comparables ya que Query es una función en C y las otras son funciones en LUA que lo utilizan.
 
 Si imprimes el "short source" de estas 3 funciones con `debug.getinfo` obtienes:
 
@@ -501,7 +501,7 @@ Esto significa que no importa realmente (en términos de velocidad) si usas Quer
 
 # Encontrar entidades cerca de un jugador
 
-TL;DR: ents.FindInBox y ents.FindInCone son las formas más rápidas de encontrar entidades cerca de un jugador porque son fáciles de calcular y no devuelven demasiadas entidades.
+Resumen: ents.FindInBox y ents.FindInCone son las formas más rápidas de encontrar entidades cerca de un jugador porque son fáciles de calcular y no devuelven demasiadas entidades.
 
 Los métodos probados para obtener entidades alrededor de un jugador son:
 
@@ -526,7 +526,7 @@ El código: [files/finding_entities.lua](files/finding_entities.lua)
 
 # Encontrar jugadores cerca de ti
 
-TL;DR: Es más rápido iterar a través de todos los jugadores y verificar su distancia a ti que usar `ents.FindInSphere` y filtrar por jugadores.
+Resumen: Es más rápido iterar a través de todos los jugadores y verificar su distancia a ti que usar `ents.FindInSphere` y filtrar por jugadores.
 
 Esto se probó con 40 jugadores (bots) en un servidor. Al iterar a través de todos los jugadores y verificar la distancia entre tú y ellos, eres más rápido que al encontrar e iterar a través de todas las entidades cerca de ti y verificar si son jugadores.
 
@@ -549,7 +549,7 @@ El código: [files/finding_players.lua](files/finding_players.lua)
 
 # Hashes (MD5, SHA1, SHA256)
 
-TL;DR: Como era de esperar, cuanta más unicidad necesites, más tiempo tomará calcularlo. Esto significa que MD5 es el más rápido pero tiene mayor probabilidad de colisiones que el más lento SHA256.
+Resumen: Como era de esperar, cuanta más unicidad necesites, más tiempo tomará calcularlo. Esto significa que MD5 es el más rápido pero tiene mayor probabilidad de colisiones que el más lento SHA256.
 
 CRC32 y Base64 están incluidos solo como comparación. No son "buenos algoritmos de hash" en la misma categoría que MD5 por ejemplo.  
 Cada función probada está definida en C y no en LUA (según short_src de `debug.getinfo`).
@@ -571,7 +571,7 @@ El código: [files/hashes.lua](files/hashes.lua)
 
 # Comparación de "se están mirando"
 
-TL;DR: Usar la distancia entre vectores normalizados de la dirección de visión de los jugadores es el método más rápido.
+Resumen: Usar la distancia entre vectores normalizados de la dirección de visión de los jugadores es el método más rápido.
 
 La pregunta es: ¿Cómo calcular de manera más eficiente "¿Están estos 2 jugadores viéndose mutuamente en sus pantallas ahora mismo?"  
 Esto fue un problema para una mecánica de juego que necesitaba calcularse eficientemente para no causar lag.
@@ -608,7 +608,7 @@ El código: [files/looking_at_each_other.lua](files/looking_at_each_other.lua)
 
 # for v in plys hook.Run vs hook.Run plys
 
-TL;DR: Es más rápido llamar un hook una vez con todos los jugadores iterando dentro, que iterar a través de los jugadores y llamar un hook para cada uno individualmente.
+Resumen: Es más rápido llamar un hook una vez con todos los jugadores iterando dentro, que iterar a través de los jugadores y llamar un hook para cada uno individualmente.
 
 Esta es una comparación entre:
 
@@ -629,7 +629,7 @@ El código: [files/hook_many_vs_hook_once.lua](files/hook_many_vs_hook_once.lua)
 
 # fn de DarkRP vs lua normal
 
-TL;DR: La librería fn de DarkRP es (la mayoría de veces) más lenta y difícil de entender que código lua simple.
+Resumen: La librería fn de DarkRP es (la mayoría de veces) más lenta y difícil de entender que código lua simple.
 
 Esta es una comparación entre 2 funciones que hacen lo mismo pero están escritas de forma completamente diferente.  
 Por favor revisa el código para ver exactamente qué fragmentos fueron probados.
@@ -650,7 +650,7 @@ El código: [files/darkrp_fn_vs_standard_lua.lua](files/darkrp_fn_vs_standard_lu
 
 # surface.DrawRect vs draw.RoundedBox
 
-TL;DR: Es ligeramente más rápido usar surface.DrawRect en lugar de draw.RoundedBox.  
+Resumen: Es ligeramente más rápido usar surface.DrawRect en lugar de draw.RoundedBox.  
 Sin embargo, no debería ser importante para el rendimiento ya que draw.RoundedBox también soporta bordes redondeados y es más simple de leer y escribir.
 
     surface.DrawRect:   7.4859800010245e-06
@@ -662,7 +662,7 @@ El código: [files/surface_vs_draw_box.lua](files/surface_vs_draw_box.lua)
 
 # surface.SetDrawColor: objeto vs valores separados
 
-TL;DR: Es más rápido llamar a SetDrawColor con los valores RGB separados que usar un objeto Color.
+Resumen: Es más rápido llamar a SetDrawColor con los valores RGB separados que usar un objeto Color.
 
 Puedes usar la función SetDrawColor de 2 formas:
 
@@ -683,7 +683,7 @@ El código: [files/setdrawcolor_comparison.lua](files/setdrawcolor_comparison.lu
 
 # Creación de tablas: asignaciones vs índice
 
-TL;DR: Es más rápido asignar todas las variables de una tabla dentro de los corchetes iniciales.
+Resumen: Es más rápido asignar todas las variables de una tabla dentro de los corchetes iniciales.
 
 Actualmente veo 2 formas diferentes de inicializar tablas en el código.  
 La primera es simplemente:
@@ -716,7 +716,7 @@ El código: [files/table_assignments.lua](files/table_assignments.lua)
 
 # print vs Msg
 
-TL;DR: MsgN y Msg son más rápidos que `print`. Msg es solo un poco más rápido que MsgN, porque no añade un salto de línea al final.
+Resumen: MsgN y Msg son más rápidos que `print`. Msg es solo un poco más rápido que MsgN, porque no añade un salto de línea al final.
 
 La prueba simplemente imprime mensajes usando Msg, MsgN y print, y mide el tiempo tomado.
 
@@ -745,7 +745,7 @@ El código: [files/print_vs_msgn.lua](files/print_vs_msgn.lua)
 
 # Multiplicación vs División
 
-TL;DR: En Garry's Mod no es más rápido calcular x * 0.5 que x / 2.
+Resumen: En Garry's Mod no es más rápido calcular x * 0.5 que x / 2.
 PERO: Es más rápido multiplicar que dividir en LUA5.3.
 
 Resultado (promedio de 100 rondas con 1,000,000 de cálculos cada una):
@@ -763,7 +763,7 @@ El código: [files/multiplication_vs_division.lua](files/multiplication_vs_divis
 
 # math.Clamp vs math.min y math.max
 
-TL;DR: Es mínimamente más rápido usar math.min en combinación con math.max en lugar de math.Clamp, pero la diferencia es insignificante.
+Resumen: Es mínimamente más rápido usar math.min en combinación con math.max en lugar de math.Clamp, pero la diferencia es insignificante.
 
 Resultado:
 
@@ -784,7 +784,7 @@ El código: [files/math_clamp.lua](files/math_clamp.lua)
 
 # Sobreescritura de Vector:Dot(Vector)
 
-TL;DR: No es más rápido sobreescribir e implementar el cálculo del producto punto de vectores en LUA.
+Resumen: No es más rápido sobreescribir e implementar el cálculo del producto punto de vectores en LUA.
 
 Resultado:
 
@@ -800,7 +800,7 @@ El código: [files/vector_dot_overwrite.lua](files/vector_dot_overwrite.lua)
 
 # Sobreescritura de Vector:Normalize()
 
-TL;DR: No es más rápido sobreescribir e implementar el cálculo de normalización de vectores en LUA.
+Resumen: No es más rápido sobreescribir e implementar el cálculo de normalización de vectores en LUA.
 
 Resultado:
 
@@ -816,7 +816,7 @@ El código: [files/vector_normalize_overwrite.lua](files/vector_normalize_overwr
 
 # Sobreescritura de Vector:Length()
 
-TL;DR: No es más rápido sobreescribir e implementar el cálculo de longitud de vectores en LUA.
+Resumen: No es más rápido sobreescribir e implementar el cálculo de longitud de vectores en LUA.
 
 Resultado:
 
@@ -832,7 +832,7 @@ El código: [files/vector_length_overwrite.lua](files/vector_length_overwrite.lu
 
 # Sobreescritura de math.Round
 
-TL;DR: Es ligeramente más rápido sobreescribir e implementar el cálculo de math.Round en LUA.
+Resumen: Es ligeramente más rápido sobreescribir e implementar el cálculo de math.Round en LUA.
 
 Resultado:
 
@@ -848,7 +848,7 @@ El código: [files/math_round_overwrite.lua](files/math_round_overwrite.lua)
 
 # Velocidad de variables locales vs globales
 
-TL;DR: Es un poquito más rápido hacer todas las variables locales en Garry's Mod (14% en este ejemplo).
+Resumen: Es un poquito más rápido hacer todas las variables locales en Garry's Mod (14% en este ejemplo).
 
 Resultado (promedio de 100 rondas con 10000 cálculos cada una):
 
@@ -865,7 +865,7 @@ El código: [files/local_vs_global.lua](files/local_vs_global.lua)
 
 # Almacenamiento en caché de GetConVar
 
-TL;DR: No es más rápido almacenar en caché los ConVars en LUA.
+Resumen: No es más rápido almacenar en caché los ConVars en LUA.
 
 La página del wiki indica que la función GetConVar "...almacena en caché el resultado en Lua para búsquedas más rápidas", por lo que volver a almacenar el resultado no lo hará más rápido.
 
@@ -885,7 +885,7 @@ El código: [files/getconvar_cache.lua](files/getconvar_cache.lua)
 
 Esta prueba compara la función math.pow incorporada con el operador de potencia estándar.
 
-TL;DR: Usar el operador "^" es ligeramente más rápido en GMod. La velocidad es igual en Lua5.4.
+Resumen: Usar el operador "^" es ligeramente más rápido en GMod. La velocidad es igual en Lua5.4.
 
 Resultado (promedio de 100 rondas con 10000 cálculos cada una):
 
@@ -904,7 +904,7 @@ El código: [files/x_squared_vs_x_times.lua](files/x_squared_vs_x_times.lua)
 
 # while vs for
 
-TL;DR: Un bucle for es significativamente más rápido que while.
+Resumen: Un bucle for es significativamente más rápido que while.
 
 Resultado (100x 10000 iteraciones):
 
@@ -921,7 +921,7 @@ El código: [files/while_vs_for.lua](files/while_vs_for.lua)
 
 # Color() local vs redefinición
 
-TL;DR: Definir el color una vez es más rápido que usar Color() repetidamente en un bucle.
+Resumen: Definir el color una vez es más rápido que usar Color() repetidamente en un bucle.
 
 Resultado (1000 iteraciones medido con SysTime()):
 
@@ -934,7 +934,7 @@ El código: [files/local_color_vs_redefining.lua](files/local_color_vs_redefinin
 
 # Impacto de variables globales
 
-TL;DR: Crear muchas variables globales no ralentiza el juego ni tiene un impacto notable en el rendimiento.
+Resumen: Crear muchas variables globales no ralentiza el juego ni tiene un impacto notable en el rendimiento.
 
 Escuché de múltiples fuentes que "crear muchas variables globales es malo".  
 Probé esto creando 10,000 variables globales y observando el juego después. Un ejemplo con el tiempo de ejecución de 10,000 llamadas a funciones matemáticas:
@@ -951,7 +951,7 @@ Para más detalles sobre la prueba (o si quieres verificarlo tú mismo) revisa e
 
 # table.Count vs operador #
 
-TL;DR: Es mejor usar siempre el operador `#` en lugar de table.Count para tablas secuenciales.
+Resumen: Es mejor usar siempre el operador `#` en lugar de table.Count para tablas secuenciales.
 
 Esta comparación solo funciona en tablas secuenciales (o numéricas). Estas son tablas que tienen una clave numérica ascendente, en otros lenguajes se les llamaría "lista" o array.
 
@@ -974,7 +974,7 @@ El código: [files/table_count_vs_hashtag.lua](files/table_count_vs_hashtag.lua)
 
 # Sobreescritura de table.Random
 
-TL;DR: Es más rápido generar un índice aleatorio de una tabla secuencial y obtener un valor aleatorio de esta manera en lugar de usar table.Random().
+Resumen: Es más rápido generar un índice aleatorio de una tabla secuencial y obtener un valor aleatorio de esta manera en lugar de usar table.Random().
 
 Resultado:
 
@@ -992,7 +992,7 @@ El código: [files/table_random_overwrite.lua](files/table_random_overwrite.lua)
 
 # Sobreescritura de table.Count
 
-TL;DR: No es más rápido sobreescribir la función table.Count y contar la tabla manualmente en LUA.
+Resumen: No es más rápido sobreescribir la función table.Count y contar la tabla manualmente en LUA.
 
 Resultado:
 
@@ -1010,7 +1010,7 @@ El código: [files/table_count_overwrite.lua](files/table_count_overwrite.lua)
 
 # Sobreescritura de file.Write
 
-TL;DR: No es más rápido sobreescribir la función file.Write para usar funciones de bajo nivel de Lua para escribir archivos.
+Resumen: No es más rápido sobreescribir la función file.Write para usar funciones de bajo nivel de Lua para escribir archivos.
 
 Resultado:
 
@@ -1026,7 +1026,7 @@ El código: [files/file_write_overwrite.lua](files/file_write_overwrite.lua)
 
 # ply.x vs tab[ply][x]
 
-TL;DR: Es más rápido obtener variables de una tabla que del objeto ply. Establecer una variable tiene casi la misma velocidad, solo obtenerla es más lento en ply.
+Resumen: Es más rápido obtener variables de una tabla que del objeto ply. Establecer una variable tiene casi la misma velocidad, solo obtenerla es más lento en ply.
 
 Muchos usamos código como `ply.lastSpawned = CurTime()`. Esto es fácil de usar y entender, pero en términos de rendimiento es más lento que usar una tabla. Un ejemplo con tabla sería `tab[ply]["lastSpawned"] = CurTime()`.  
 Esto se debe a que leer esta variable de un jugador usa un método __index más lento. Si has usado FProfiler, probablemente hayas visto esta función "metamethod __index player" cerca de la parte superior de "most runtime in ms".
