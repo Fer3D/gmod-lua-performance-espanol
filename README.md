@@ -1,60 +1,60 @@
 # gmod-lua-performance
-A simple comparison of performance optimizations for gLUA
+Una comparación simple de optimizaciones de rendimiento para gLUA
 
-These are a few benchmarks that are tested on a Garry's Mod Server idling with DarkRP with only 1 player online.
-Some of those benchmarks, if possible, were also tested in a LUA5.3 console on Debian 10. If not otherwise stated differently all tests have been done on a 32bit gmod server on linux.  
+Estos son algunos benchmarks probados en un servidor de Garry's Mod inactivo con DarkRP y solo 1 jugador en línea.
+Algunos de estos benchmarks, cuando fue posible, también se probaron en una consola LUA5.3 en Debian 10. A menos que se indique lo contrario, todas las pruebas se realizaron en un servidor gmod de 32 bits en linux.  
 
-These benchmark results mean nothing compared to other benchmark results. Your numbers will probably look completely different than my numbers. Please compare your benchmark results only with your own numbers, as every small change in Hardware changes the result notably.
+Estos resultados de benchmarks no significan nada en comparación con otros resultados de benchmarks. Tus números probablemente se verán completamente diferentes a los míos. Por favor compara tus resultados de benchmarks solo con tus propios números, ya que cada pequeño cambio en el hardware altera notablemente el resultado.
 
-**The goal of this collection of benchmarks is to show the actual performance gain by implementing "Coding Tips" from the web.**
+**El objetivo de esta colección de benchmarks es mostrar la ganancia real de rendimiento al implementar "Consejos de Codificación" de la web.**
 
-**Everyone can test the code for themselves and see the difference. Source code is always linked at the bottom of a comparison.**
+**Cualquiera puede probar el código por sí mismo y ver la diferencia. El código fuente siempre está enlazado al final de cada comparación.**
 
-The sources for some of the "Coding Tips" are:
+Las fuentes de algunos de los "Consejos de Codificación" son:
 
 [lua-users.org](http://lua-users.org/wiki/OptimisationCodingTips)  
 [lua.org](https://www.lua.org/gems/sample.pdf)  
 [stackoverflow.com](https://stackoverflow.com/questions/154672/what-can-i-do-to-increase-the-performance-of-a-lua-program/12865406#12865406)  
 
-If you want to read more about gmod lua then you could also visit my wiki at [luctus.at/wiki](https://luctus.at/wiki/)
+Si quieres leer más sobre gmod lua, también puedes visitar mi wiki en [luctus.at/wiki](https://luctus.at/wiki/)
 
 
-# Foreword
+# Prólogo
 
-Garry's Mod doesn't use only lua. It uses lua-jit.  
-This means the following benchmarks show, where applicable, also a comparison of lua and lua-jit.  
-Many of the performance tips online are supposed to be for lua, not luajit.
+Garry's Mod no utiliza solo lua. Utiliza lua-jit.  
+Esto significa que los siguientes benchmarks muestran, cuando es aplicable, también una comparación entre lua y lua-jit.  
+Muchos de los consejos de rendimiento en internet están pensados para lua, no para luajit.
 
-An example of lua vs lua-jit with the "multiplication vs division" example:
+Un ejemplo de lua vs lua-jit con el ejemplo de "multiplicación vs división":
 
     $ time luajit-2.1.0-beta3 mult_vs_div.lua
-    Multiplication: 0.00111624
-    Division: 0.00110691
+    Multiplicación: 0.00111624
+    División: 0.00110691
 
     real    0m1.255s
     user    0m1.054s
     sys     0m0.182s
 
     $ time lua5.3 mult_vs_div.lua
-    Multiplication: 0.0284177
-    Division: 0.03088507
+    Multiplicación: 0.0284177
+    División: 0.03088507
 
     real    0m21.773s
     user    0m21.623s
     sys     0m0.120s
 
-If you find any error, mistake or completely different result on your side please create a pull request.  
-I want this page to be as accurate as possible so that everyone can see and learn what actually benefits your code's performance.
+Si encuentras algún error, equivocación o resultados completamente diferentes en tus pruebas, por favor crea un pull request.  
+Quiero que esta página sea lo más precisa posible para que todos puedan ver y aprender qué realmente beneficia el rendimiento de tu código.
 
 
 
-# caching functions in HUDPaint
+# Almacenamiento en caché de funciones en HUDPaint
 
-TL;DR: If you use a a function, e.g. LocalPlayer(), often in a HUDPaint hook then I highly suggest caching it once at the beginning.
+TL;DR: Si usas una función frecuentemente en un hook HUDPaint (como LocalPlayer()), recomiendo almacenarla en caché al principio.
 
-This is a comparison of the following code bits. The question is: "Should you cache a function you only use 3 times?".
+Esta es una comparación de los siguientes fragmentos de código. La pregunta es: "¿Deberías almacenar en caché una función que solo usas 3 veces?".
 
-The unoptimized version:
+Versión no optimizada:
 
 ```lua
 draw.RoundedBox(0, LocalPlayer():Health(), 500, 500, 500, color_white )
@@ -62,7 +62,7 @@ draw.RoundedBox(0, LocalPlayer():Health(), 200, 200, 200, color_white )
 draw.RoundedBox(0, LocalPlayer():Health(), 10, 10, 10, color_white )
 ```
 
-and the better version:
+y la versión mejorada:
 
 ```lua
 local lph = LocalPlayer():Health()
@@ -71,148 +71,148 @@ draw.RoundedBox(0, lph, 200, 200, 200, color_white )
 draw.RoundedBox(0, lph, 10, 10, 10, color_white )
 ```
 
-The result (10000 frametimes):
+Resultados (10000 mediciones de tiempo por frame):
 
-    Non-Local:  0.00001756282000116   (1.756282000116e-05)
-    Local:      0.000006777780000516  (6.777780000516e-06)
+    Sin caché:  0.00001756282000116   (1.756282000116e-05)
+    Con caché:      0.000006777780000516  (6.777780000516e-06)
 
-Code: [files/hudpaint_3call_cache.lua](files/hudpaint_3call_cache.lua)
+Código: [files/hudpaint_3call_cache.lua](files/hudpaint_3call_cache.lua)
 
 
 
-# Caching LocalPlayer function
+# Almacenamiento en caché de la función LocalPlayer
 
-TL;DR: It is faster to cache the response of `LocalPlayer()` and overwrite the function to always return this value.
+TL;DR: Es más rápido almacenar en caché el resultado de `LocalPlayer()` y sobrescribir la función para que siempre devuelva este valor.
 
-Pretty self explanatory. LocalPlayer() always returns you, the player, but takes more time than if you were to simply cache the player entity and return it everytime.  
-Check the code for more info.
+Es bastante autoexplicativo. `LocalPlayer()` siempre te devuelve a ti (el jugador), pero toma más tiempo que si simplemente almacenaras la entidad del jugador en caché y la devolvieras cada vez.  
+Revisa el código para más información.
 
-Result:
+Resultados:
 
-    --- Benchmark complete
-    On Client
-    reps	20	rounds	50000
-    old LocalPlayer	7.4946100011402e-08
+    --- Benchmark completado
+    En Cliente
+    repeticiones	20	vueltas	50000
+    LocalPlayer original	7.4946100011402e-08
     fastLocalPlayer	6.2921299662776e-08
 
-The Code: [files/localplayer_cache.lua](files/localplayer_cache.lua)
+Código: [files/localplayer_cache.lua](files/localplayer_cache.lua)
 
 
 
-# Caching LocalPlayer with "or"
+# Almacenamiento en caché de LocalPlayer con "or"
 
-TL;DR: It is a bit faster to "ply = ply or LocalPlayer()" instead of always using LocalPlayer(), but the time save is barely noticable.
+TL;DR: Es ligeramente más rápido usar "ply = ply or LocalPlayer()" que usar siempre LocalPlayer(), pero la ganancia de tiempo es casi imperceptible.
 
-Pretty self explanatory. This caches LocalPlayer() on first run and then always reuses this value.  
-Check the code for more info.
+Bastante autoexplicativo. Esto almacena LocalPlayer() en la primera ejecución y luego reutiliza ese valor.  
+Consulta el código para más información.
 
-Result:
+Resultados:
 
-    --- Benchmark complete
-    On Client
-    reps	20	rounds	10000
-    Cached	5.8824900024945e-07
-    Plain 	6.021605001348e-07
+    --- Benchmark completado
+    En Cliente
+    repeticiones	20	vueltas	10000
+    Con caché	5.8824900024945e-07
+    Sin caché 	6.021605001348e-07
 
-The Code: [files/localplayer_cached_or.lua](files/localplayer_cached_or.lua)
-
-
-
-# Angle:Zero() vs new Angle()
-
-TL;DR: It is a faster to reuse the same Angle object and zero it before use than to create a new Angle object everytime.
-
-The wiki states this as fact, and it is true. It saves you the overhead of creating a new object and garbage-collecting the old one.  
-Check the code for more info.
-
-Result:
-
-    --- Benchmark complete
-    On Server
-    reps	30	rounds	5000
-    Zero'd	1.3485066712595e-07
-    Create	2.3365133318293e-07
-    --- Benchmark complete
-    On Client
-    reps	30	rounds	5000
-    Zero'd	1.1277866673481e-07
-    Create	2.4979333345679e-07
-
-The Code: [files/angle_zero_vs_new.lua](files/angle_zero_vs_new.lua)
+Código: [files/localplayer_cached_or.lua](files/localplayer_cached_or.lua)
 
 
 
-# Caching SteamID function
+# Angle:Zero() vs Angle() nuevo
 
-TL;DR: It is faster to cache the response of `ply:SteamID()` and overwrite the function to always return this value for a player from a caching table.
+TL;DR: Es más rápido reutilizar el mismo objeto Angle y reiniciarlo a cero antes de usarlo que crear un nuevo objeto Angle cada vez.
 
-Pretty self explanatory. Same as "Caching LocalPlayer function" above.
+El wiki lo establece como un hecho, y es cierto. Te ahorra la sobrecarga de crear un nuevo objeto y recolectar el anterior.  
+Consulta el código para más información.
 
-Result:
+Resultados:
 
-    --- Benchmark complete
-    On Server
-    reps	20	rounds	50000
-    SteamID Classic	4.6951399998613e-07
-    SteamID Cached	7.0017300033214e-08
-    --- Benchmark complete
-    On Client
-    reps	20	rounds	50000
-    SteamID Classic	5.2189459993372e-07
-    SteamID Cached	6.247109999822e-08
+    --- Benchmark completado
+    En Servidor
+    repeticiones	30	vueltas	5000
+    Reiniciado	1.3485066712595e-07
+    Crear nuevo	2.3365133318293e-07
+    --- Benchmark completado
+    En Cliente
+    repeticiones	30	vueltas	5000
+    Reiniciado	1.1277866673481e-07
+    Crear nuevo	2.4979333345679e-07
 
-The Code: [files/steamid_cache.lua](files/steamid_cache.lua)
+Código: [files/angle_zero_vs_new.lua](files/angle_zero_vs_new.lua)
+
+
+
+# Almacenamiento en caché de función SteamID
+
+TL;DR: Es más rápido almacenar en caché el resultado de `ply:SteamID()` y sobrescribir la función para que siempre devuelva este valor para un jugador desde una tabla de caché.
+
+Bastante autoexplicativo. Igual que "Almacenamiento en caché de función LocalPlayer" mencionado anteriormente.
+
+Resultados:
+
+    --- Benchmark completado
+    En Servidor
+    repeticiones	20	vueltas	50000
+    SteamID Clásico	4.6951399998613e-07
+    SteamID en Caché	7.0017300033214e-08
+    --- Benchmark completado
+    En Cliente
+    repeticiones	20	vueltas	50000
+    SteamID Clásico	5.2189459993372e-07
+    SteamID en Caché	6.247109999822e-08
+
+Código: [files/steamid_cache.lua](files/steamid_cache.lua)
 
 
 
 # GetNWString vs getDarkRPVar
 
-TL;DR: getDarkRPVar is always faster on server while on client it seems to be random. I would recommend using getDarkRPVar, as it is more optimized for network usage in comparison to NW1's constant network traffic every 10 seconds.
+TL;DR: getDarkRPVar siempre es más rápido en el servidor, mientras que en el cliente parece ser aleatorio. Recomendaría usar getDarkRPVar, ya que está más optimizado para el uso de red en comparación con el tráfico constante de red cada 10 segundos de NW1.
 
-This is a comparison between `ply:GetNWString("job")` and `ply:getDarkRPVar("job")`.
+Esta es una comparación entre `ply:GetNWString("job")` y `ply:getDarkRPVar("job")`.
 
-Result:
+Resultados:
 
-    --- Benchmark complete
-    reps	10	rounds	10000
-    On Server
+    --- Benchmark completado
+    repeticiones	10	vueltas	10000
+    En Servidor
     darkrpvar	1.2346400001078e-07
     gmodnwvar	2.0404500001689e-07
-    --- Benchmark complete
-    reps	10	rounds	10000
-    On Client
+    --- Benchmark completado
+    repeticiones	10	vueltas	10000
+    En Cliente
     darkrpvar	2.4343500003823e-07
     gmodnwvar	2.036369999766e-07
 
-As you can see, the result is different on client and server. The result on the client is always different everytime i run these tests. Sometimes, on the client , the gmodnwvar is faster by 25% and other times it is 300% slower than darkrpvar.
+Como se puede ver, el resultado difiere entre cliente y servidor. El resultado en el cliente siempre varía cada vez que ejecuto estas pruebas. A veces, en el cliente, gmodnwvar es un 25% más rápido y otras veces es un 300% más lento que darkrpvar.
 
-Code: [files/nwvar_vs_darkrpvar.lua](files/nwvar_vs_darkrpvar.lua)
-
-
-
-# Config Table vs Variable
-
-TL;DR: Using a table is slower than using a variable.
-
-This is a comparison between using a config table like `myaddon.config.color =` and a simple variable like `myaddon_config_color =`. This mainly exists because some people don't believe me.
-
-The result:
-
-    --SERVER
-    tab=	1.9999993128295e-07
-    var=	1.0000007932831e-07
-    --CLIENT
-    tab=	1.0000007932831e-07
-    var=	0
-
-As you can see above, using a single variable instead of a table structure is faster.
+Código: [files/nwvar_vs_darkrpvar.lua](files/nwvar_vs_darkrpvar.lua)
 
 
-## Explanation
 
-Getting a variable is as simple as "getting" it. But with a table you have to get the table and then the table element inside.  
-You can inspect this with lua's luac command, e.g. `luac5.4 -l file.lua`.  
-An example: `print(abc)` vs `print(a.b.c)`
+# Tabla de Configuración vs Variable
+
+TL;DR: Usar una tabla es más lento que usar una variable.
+
+Esta es una comparación entre usar una tabla de configuración como `myaddon.config.color =` y una simple variable como `myaddon_config_color =`. Esto existe principalmente porque algunas personas no me creen.
+
+El resultado:
+
+    --SERVIDOR
+    tabla=	1.9999993128295e-07
+    variable=	1.0000007932831e-07
+    --CLIENTE
+    tabla=	1.0000007932831e-07
+    variable=	0
+
+Como se puede ver arriba, usar una sola variable en lugar de una estructura de tabla es más rápido.
+
+
+## Explicación
+
+Obtener una variable es tan simple como "obtenerla". Pero con una tabla tienes que obtener la tabla y luego el elemento dentro de la tabla.  
+Puedes inspeccionar esto con el comando luac de lua, por ejemplo `luac5.4 -l archivo.lua`.  
+Un ejemplo: `print(abc)` vs `print(a.b.c)`
 
 ```
 $ luac5.4 -l var.lua
@@ -232,262 +232,261 @@ $ luac5.4 -l tab.lua
         RETURN          0 1 1   ; 0 out
 ```
 
-As you can observe above, the table variant simply has more executions and is thus slower in theory and practice as shown above.
+Como puedes observar arriba, la variante de tabla simplemente tiene más ejecuciones y por lo tanto es más lenta tanto en teoría como en práctica como se mostró anteriormente.
 
-Code: [files/table_vs_variable.lua](files/table_vs_variable.lua)
+Código: [files/table_vs_variable.lua](files/table_vs_variable.lua)
 
 
 
 # pairs vs ipairs vs for i=1
 
-TL;DR: They are not as different as people make it out to be. Pairs is slower because it also works on non-sequential tables.
+TL;DR: No son tan diferentes como la gente cree. Pairs es más lento porque también funciona con tablas no secuenciales.
 
-The result (10 tests of 100 runs each with calculating the sum of a 10.000 number table):
+Resultados (10 pruebas de 100 ejecuciones cada una, calculando la suma de una tabla de 10,000 números):
 
     pairs 	8.8780000373845e-07
     ipairs	2.4300000836774e-07
     for #t	1.639000013256e-07
 
 
-Code: [files/pairs_vs_ipairs_vs_for.lua](files/pairs_vs_ipairs_vs_for.lua)
+Código: [files/pairs_vs_ipairs_vs_for.lua](files/pairs_vs_ipairs_vs_for.lua)
 
 
 
-# player.GetAll() pairs vs ipairs vs for vs Iterator
+# Comparación de iteradores para player.GetAll()
 
-TL;DR: The fastest is the Iterator, but I (and the wiki) would not recommend using it as it is error prone. Using ipairs is a very readable, easy to use and fast way to iterate over all players.
+TL;DR: El más rápido es el Iterador, pero yo (y el wiki) no lo recomendaría porque es propenso a errores. Usar ipairs es una forma muy legible, fácil de usar y rápida de iterar sobre todos los jugadores.
 
-The result:
+Resultados:
 
     pairs 	2.7375729999562e-06
     ipairs	2.5955539999833e-06
     for #t	2.5866950000025e-06
     iter 	1.7860300003008e-07
 
-Code: [files/player_getall_compare.lua](files/player_getall_compare.lua)
+Código: [files/player_getall_compare.lua](files/player_getall_compare.lua)
 
 
 
-# looping through string vs number tables
+# Iteración en tablas de strings vs números
 
-TL;DR: Numbered and Sequential tables are always faster thanks to ipairs and for loops being able to speed up the loop. There is no difference between the string index length in terms of speed. Sequentially-numbered tables are faster than non-sequential number tables.
+TL;DR: Las tablas indexadas numéricamente y secuenciales son siempre más rápidas gracias a que ipairs y los bucles for pueden optimizar la iteración. No hay diferencia en velocidad según la longitud de los strings usados como índice. Las tablas con números secuenciales son más rápidas que las no secuenciales.
 
-With a 100 element table and 1000 runs for each of the 5 testruns:
+Con una tabla de 100 elementos y 1000 ejecuciones para cada una de las 5 pruebas:
 
-    short string pairs	1.016059995527e-06
-    big   string pairs	9.8490000327729e-07
-    sequent  int pairs	8.060999940426e-07
-    sequent int ipairs	2.9101999789418e-07
-    unsorted int pairs	1.0006600032284e-06
+    pairs con strings cortos	1.016059995527e-06
+    pairs con strings largos	9.8490000327729e-07
+    pairs con enteros secuenciales	8.060999940426e-07
+    ipairs con enteros secuenciales	2.9101999789418e-07
+    pairs con enteros no ordenados	1.0006600032284e-06
 
-There is barely any difference between long and short string tables. The main difference in terms of speed comes with sequential number index tables, which can utilize `ipairs` to be faster than using `pairs`.
+Hay poca diferencia entre tablas con strings largos o cortos. La principal diferencia de velocidad ocurre con tablas indexadas numéricamente de forma secuencial, que pueden usar `ipairs` para ser más rápidas que usando `pairs`.
 
-Code: [files/string_vs_number_table.lua](files/string_vs_number_table.lua)
+Código: [files/string_vs_number_table.lua](files/string_vs_number_table.lua)
 
 
 
 # Distance vs DistToSqr
 
-TL;DR: The time difference between Distance and DistToSqr is barely noticable.
+TL;DR: La diferencia de tiempo entre Distance y DistToSqr es casi imperceptible.
 
-The result (average of 10000 calculations):
+Resultados (promedio de 10000 cálculos):
 
     Distance:   0.00000026040000557259 (2.6040000557259e-07)
     DistToSqr:  0.00000025130000176432 (2.5130000176432e-07)
 
-The Code: [files/distance_vs_disttosqr.lua](files/distance_vs_disttosqr.lua)
+Código: [files/distance_vs_disttosqr.lua](files/distance_vs_disttosqr.lua)
 
 
 
-# ternary vs if
+# Operador ternario vs if
 
-TL;DR: They take the same amount of time. The difference is randomly swinging a tiny bit to each side every test.
+TL;DR: Toman la misma cantidad de tiempo. La diferencia fluctúa aleatoriamente con variaciones mínimas en cada prueba.
 
-Tested: `a = t and 7 or 1` vs `a=1 if t then a=7 end`
+Pruebas realizadas:  
+`a = t and 7 or 1` vs `a=1 if t then a=7 end`
 
-The result (average of 1000000 calculations):
+Resultados (promedio de 1,000,000 cálculos):
 
     if:      4.1537399886693e-08
-    ternary: 4.168440006697e-08
+    ternario: 4.168440006697e-08
 
-The Code: [files/ternary_vs_if.lua](files/ternary_vs_if.lua)
+Código: [files/ternary_vs_if.lua](files/ternary_vs_if.lua)
 
 
 
-# table.insert vs table[#table+1] = 
+# table.insert vs asignación directa
 
-TL;DR: The time difference between using table.insert(myTable,9) and myTable[#myTable+1] = 9 is barely noticable, as the results were mostly the same. (Even if tested on Lua5.3 console)
+TL;DR: La diferencia de tiempo entre usar `table.insert(myTable,9)` y `myTable[#myTable+1] = 9` es casi imperceptible, ya que los resultados fueron prácticamente idénticos (incluso probado en consola Lua5.3).
 
-The result (inserting 1million values):
+Resultados (insertando 1 millón de valores):
 
     table.insert:         0.066328400000003
-    local table.insert:   0.07047399999999
+    table.insert local:   0.07047399999999
     [#res+1]:             0.066876700000023
 
-The Code: [files/table.insert_vs_table.lua](files/table.insert_vs_table.lua)
+Código: [files/table.insert_vs_table.lua](files/table.insert_vs_table.lua)
 
 
 
 # table.HasValue(table,x) vs table[x]
 
-TL;DR: Directly checking the table key with table[value] is way faster.
+TL;DR: Verificar directamente la clave de la tabla con table[valor] es mucho más rápido.
 
-The result (1million lookups):
+Resultados (1 millón de búsquedas):
 
     table.HasValue:   0.032319600000051
-    table[value]:     0.00024150000001555
+    table[valor]:     0.00024150000001555
 
 
-The Code: [files/table.hasvalue_vs_table.lua](files/table.hasvalue_vs_table.lua)
+Código: [files/table.hasvalue_vs_table.lua](files/table.hasvalue_vs_table.lua)
 
-Note:
-This is a O(n) vs O(1) situation. This means the bigger the table the slower table.HasValue will get.  
-For other examples visit [https://wiki.facepunch.com/gmod/table.HasValue](https://wiki.facepunch.com/gmod/table.HasValue)  
-To learn more about the "Big O Notation" visit, for example, [https://web.mit.edu/16.070/www/lecture/big_o.pdf](https://web.mit.edu/16.070/www/lecture/big_o.pdf)
+Nota:
+Esto es una situación O(n) vs O(1). Significa que mientras más grande sea la tabla, más lento será table.HasValue.  
+Para más ejemplos visita [https://wiki.facepunch.com/gmod/table.HasValue](https://wiki.facepunch.com/gmod/table.HasValue)  
+Para aprender más sobre la "Notación Big O" visita, por ejemplo: [https://web.mit.edu/16.070/www/lecture/big_o.pdf](https://web.mit.edu/16.070/www/lecture/big_o.pdf)
 
 
 
 # table.Empty(tab) vs tab = {}
 
-TL;DR: Assigning an empty table is overall faster than emptying it.
+TL;DR: Asignar una nueva tabla vacía es generalmente más rápido que vaciar una existente.
 
-The following test compares small (10 elements) and big (10.000) tables with each method. It also differentiates between numerical tables (key 1,2,3,...) and string index tables (key a,b,c,...).  
-Result:
+La siguiente prueba compara tablas pequeñas (10 elementos) y grandes (10,000) con cada método. También diferencia entre tablas numéricas (claves 1,2,3,...) y tablas con índices string (claves a,b,c,...).  
+Resultados:
 
-    --- Benchmark complete
-    reps	1	rounds	1000
-    On Server
-    table.Empty numerical on small	1.5931000018554e-06
-    table.Empty numerical on big  	5.295060000276e-05
-    table.Empty stringind on small	4.9099999841928e-07
-    table.Empty stringind on big  	4.7529999847029e-07
-    table = {} numerical on small	9.8249999609834e-07
-    table = {} numerical on big  	6.0400000597838e-07
-    table = {} stringind on small	5.8179999678032e-07
-    table = {} stringind on big  	4.8149999975067e-07
-
-
-The above times vary greatly by table count and amount of tests included. In general, assigning a new table is faster than emptying one, the only exception being small string-indexed tables. The biggest difference is between emptying a big numerical table and assigning a new one.  
-An advantage of always assigning a new table: The time taken is nearly constant, so you don't have to worry about it.
+    --- Benchmark completado
+    repeticiones	1	vueltas	1000
+    En Servidor
+    table.Empty numérico pequeño	1.5931000018554e-06
+    table.Empty numérico grande	5.295060000276e-05
+    table.Empty string pequeño	4.9099999841928e-07
+    table.Empty string grande	4.7529999847029e-07
+    tabla = {} numérico pequeño	9.8249999609834e-07
+    tabla = {} numérico grande	6.0400000597838e-07
+    tabla = {} string pequeño	5.8179999678032e-07
+    tabla = {} string grande	4.8149999975067e-07
 
 
-The Code: [files/table_empty_vs_new.lua](files/table_empty_vs_new.lua)
+Los tiempos anteriores varían mucho según el tamaño de la tabla y la cantidad de pruebas. En general, asignar una nueva tabla es más rápido que vaciar una existente, siendo la única excepción las tablas pequeñas con índices string. La mayor diferencia se da al vaciar una tabla numérica grande versus asignar una nueva.  
+Ventaja de asignar siempre una nueva tabla: El tiempo requerido es casi constante, por lo que no hay que preocuparse por variaciones.
+
+
+Código: [files/table_empty_vs_new.lua](files/table_empty_vs_new.lua)
 
 
 
 # ply:IsDoing() vs IsDoing(ply)
 
-TL;DR: Not using metatables is faster.
+TL;DR: No usar metatables es más rápido.
 
-This is a comparison of using the MetaTable PLAYER vs simply passing the player as an argument.
+Esta es una comparación entre usar la MetaTable PLAYER versus simplemente pasar el jugador como argumento.
 
-The result (100.000 rounds, 100 times):
+Resultados (100,000 ejecuciones, 100 veces):
 
-    ply:IsVal()	2.5642945799856e-06
-    IsVal(ply) 	1.4792759700133e-06
-
-
-As you can see above, not using the metatable is faster. This is because with `ply:Func()` you have to check if the function exists (which is calling the __index method of the PLAYER metatable) which is slow, while in comparison with `Func(ply)` you already have the function at hand.
-
-The code: [files/meta_vs_argument.lua](files/meta_vs_argument.lua)
+    ply:IsVal()    2.5642945799856e-06
+    IsVal(ply)     1.4792759700133e-06
 
 
+Como se puede observar, no usar la metatable es más rápido. Esto ocurre porque con `ply:Func()` hay que verificar si la función existe (lo que llama al método __index de la metatable PLAYER), lo cual es lento, mientras que con `Func(ply)` ya se tiene la función directamente disponible.
 
-# String Concat vs Table Concat
-
-TL;DR: It is faster to add strings together via tables instead of stringing them together directly.
-
-The result (10000 strings):
-
-    GMOD SERVERSIDE CONSOLE
-    String Concat:  0.32185959999993
-    Table Concat:   0.0099451999999474
-    LUA5.3 CONSOLE
-    String Concat:  0.086629
-    Table Concat:   0.006428
-
-The Code: [files/string_vs_table_concat.lua](files/string_vs_table_concat.lua)
+Código: [files/meta_vs_argument.lua](files/meta_vs_argument.lua)
 
 
 
-# string.format vs .. concat
+# Concatenación de Strings vs Tabla de Concatenación
 
-TL;DR: They both have nearly the same speed of execution. It varies between who is faster every run, it's that close.  
-What is better depends on the use case, I recommend using `string.format` for cases where the input is not fixed, because with this function you can add entities/players without having to convert them to a string explicitly.
+TL;DR: Es más rápido unir strings mediante tablas que concatenarlos directamente.
 
-This is a comparison of the 2 ways of creating a single string out of multiple pieces, either with string.format or with `..` between the arguments. Example:
+Resultados (10000 strings):
+
+    CONSOLA DEL SERVIDOR GMOD
+    Concatenación directa:   0.32185959999993
+    Concatenación con tabla: 0.0099451999999474
+    CONSOLA LUA5.3
+    Concatenación directa:   0.086629
+    Concatenación con tabla: 0.006428
+
+Código: [files/string_vs_table_concat.lua](files/string_vs_table_concat.lua)
+
+
+
+# string.format vs concatenación (..)
+
+TL;DR: Ambos tienen casi la misma velocidad de ejecución. Varía entre cuál es más rápido en cada ejecución, están tan cerca.  
+Lo que es mejor depende del caso de uso, recomiendo usar `string.format` para casos donde la entrada no es fija, porque con esta función puedes añadir entidades/jugadores sin tener que convertirlos a string explícitamente.
+
+Esta es una comparación de las 2 formas de crear un string único a partir de múltiples partes, ya sea con string.format o con `..` entre los argumentos. Ejemplo:
 
 ```lua
-format = string.format("%s has steamid %s",ply:Nick(),ply:SteamID())
-concat = ply:Nick().." has steamid "..ply:SteamID()
+format = string.format("%s tiene steamid %s", ply:Nick(), ply:SteamID())
+concat = ply:Nick().." tiene steamid "..ply:SteamID()
 ```
 
-Result:
+Resultado:
 
-    --- Benchmark complete
-    reps	10	rounds	1000
-    On Server
+    --- Benchmark completado
+    repeticiones	10	vueltas	1000
+    En Servidor
     concat str	8.088840000346e-06
     format str	8.3178000002022e-06
     concat int	8.2556100002705e-06
     format int	7.6555600000233e-06
 
-As you can see above, the speed is varying a lot and here the format function is tied with the string concat.
+Como puedes ver arriba, la velocidad varía mucho y aquí la función format está empatada con la concatenación de strings.
 
-The Code: [files/string_format_vs_concat.lua](files/string_format_vs_concat.lua)
+El código: [files/string_format_vs_concat.lua](files/string_format_vs_concat.lua)
 
 
 
 # surface.DrawText vs draw.DrawText
 
-TL;DR: Using `draw.SimpleText` is nearly as fast as using the `surface.*` functions. DrawText is a bit slower and SimpleTextOutlined is by far the slowest.
+TL;DR: Usar `draw.SimpleText` es casi tan rápido como usar las funciones `surface.*`. DrawText es un poco más lento y SimpleTextOutlined es, por mucho, el más lento.
 
-This test simply draws a word on 3 different coordinates on your screen with 4 different functions and measures the time taken.  
-Result:
+Esta prueba simplemente dibuja una palabra en 3 coordenadas diferentes en tu pantalla con 4 funciones diferentes y mide el tiempo tomado.  
+Resultado:
 
-    surface 	4.4340000022203e-05
-    simple  	4.8489999971935e-05
-    drawtext	5.563999984588e-05
-    outlined	0.00012634444445009
+    surface     4.4340000022203e-05
+    simple      4.8489999971935e-05
+    drawtext    5.563999984588e-05
+    outlined    0.00012634444445009
 
+Como se puede ver arriba, el método `surface.*` es el más rápido, seguido de cerca por draw.SimpleText. Posiblemente es más rápido que `draw.DrawText` porque no "maneja saltos de línea correctamente" según la wiki de gmod. SimpleTextOutlined es el más lento porque tiene que dibujar un contorno adicional comparado con las otras 3 funciones.
 
-As you can see above the `surface.*` method is the fastest closely followed by draw.SimpleText. It is (maybe) faster than `draw.DrawText` because it doesn't "handle newlines properly" according to the gmod wiki. SimpleTextOutlined is the slowest because it has to draw an extra outline in comparison to the 3 other functions.
-
-The Code: [files/surface_vs_draw_text.lua](files/surface_vs_draw_text.lua)
+El código: [files/surface_vs_draw_text.lua](files/surface_vs_draw_text.lua)
 
 
 
 # file.Read vs sql.Query
 
-TL;DR: Using file.Read is a tiny bit faster but there is barely any difference between the 2 methods.
+TL;DR: Usar file.Read es un poco más rápido, pero apenas hay diferencia entre los 2 métodos.
 
-If you want to save text and get it later, which method is faster: Saving it to a file and reading it or saving it into sqlite and reading it?  
-Result:
+Si quieres guardar texto y recuperarlo después, ¿qué método es más rápido? ¿Guardarlo en un archivo y leerlo o guardarlo en sqlite y leerlo?  
+Resultado:
 
-    --- Benchmark complete
-    reps	20	rounds	100
-    On Server
-    file	0.00013605510000012
-    sql 	0.00014516330000007
+    --- Benchmark completado
+    repeticiones    20  vueltas  100
+    En Servidor
+    file    0.00013605510000012
+    sql     0.00014516330000007
 
+No hay una diferencia real de velocidad, por lo que no se recomienda elegir el tipo de almacenamiento basado en velocidad. Deberías elegir tu tipo de almacenamiento según lo que necesites y con qué frecuencia quieras cambiar los datos.
 
-There is no real speed difference, so it is not recommended to pick your storage type based on speed. You should pick your storage type based on what you need and how often you want to change data.
-
-The Code: [files/file_vs_sql_text.lua](files/file_vs_sql_text.lua)
-
+El código: [files/file_vs_sql_text.lua](files/file_vs_sql_text.lua)
 
 
-# sql Query vs QueryRow vs QueryValue
 
-TL;DR: They are not comparable as Query is a C function and the others LUA functions using it.
+# sql.Query vs QueryRow vs QueryValue
 
-If you print the "short source" of these 3 functions with `debug.getinfo` you get:
+TL;DR: No son comparables ya que Query es una función en C y las otras son funciones en LUA que lo utilizan.
 
-    Query	    [C]
-    QueryRow	lua/includes/util/sql.lua
-    QueryValue	lua/includes/util/sql.lua
+Si imprimes el "short source" de estas 3 funciones con `debug.getinfo` obtienes:
 
-The (shortened) source of QueryRow is:
+    Query       [C]
+    QueryRow    lua/includes/util/sql.lua
+    QueryValue  lua/includes/util/sql.lua
+
+El código (simplificado) de QueryRow es:
 
     function sql.QueryRow(query,row)
         row = row or 1
@@ -496,92 +495,92 @@ The (shortened) source of QueryRow is:
         return r
     end
 
-This means that it doesn't really matter (for speed) if you use Query and select the first row or use QueryRow directly.
+Esto significa que no importa realmente (en términos de velocidad) si usas Query y seleccionas la primera fila o usas QueryRow directamente.
 
 
 
-# Finding Entities near a player
+# Encontrar entidades cerca de un jugador
 
-TL;DR: `ents.FindInBox` and `ents.FindInCone` are the fastest ways to find entities close to a player because they are easy to calculate and do not return too many entities.
+TL;DR: ents.FindInBox y ents.FindInCone son las formas más rápidas de encontrar entidades cerca de un jugador porque son fáciles de calcular y no devuelven demasiadas entidades.
 
-The tested methods of getting entities around a player are:
+Los métodos probados para obtener entidades alrededor de un jugador son:
 
  - ents.FindInPVS
  - ents.FindInCone
  - ents.FindInSphere
  - ents.FindInBox
 
-Result:
+Resultado:
 
-    --- Benchmark complete
-    On Server
-    reps	10	rounds	10000
+    --- Benchmark completado
+    En Servidor
+    repeticiones	10	vueltas	10000
     inPVS	2.2498948000473e-05
     inBox	1.9315759995857e-06
     Sphere	3.8246590005724e-06
     Cone	1.6260100000977e-06
 
-The Code: [files/finding_entities.lua](files/finding_entities.lua)
+El código: [files/finding_entities.lua](files/finding_entities.lua)
 
 
 
-# Finding players near you
+# Encontrar jugadores cerca de ti
 
-TL;DR: It is faster to loop through all players and check their distance to you instead of using `ents.FindInSphere` and filtering for players.
+TL;DR: Es más rápido iterar a través de todos los jugadores y verificar su distancia a ti que usar `ents.FindInSphere` y filtrar por jugadores.
 
-This was tested with 40 players (bots) on a server. By looping through all players and checking the distance between you and them you are faster than by finding and looping through all the entities near you and checking if they are a player.
+Esto se probó con 40 jugadores (bots) en un servidor. Al iterar a través de todos los jugadores y verificar la distancia entre tú y ellos, eres más rápido que al encontrar e iterar a través de todas las entidades cerca de ti y verificar si son jugadores.
 
-Result:
+Resultado:
     
-    --- Benchmark complete
-    On Server
-    reps	10	rounds	1000
+    --- Benchmark completado
+    En Servidor
+    repeticiones	10	vueltas	1000
     FindInSphere	0.00011627801000012
     PlyGetAllChk	1.9475780000045e-05
-    --- Benchmark complete
-    On Client
-    reps	10	rounds	1000
+    --- Benchmark completado
+    En Cliente
+    repeticiones	10	vueltas	1000
     FindInSphere	8.301507999995e-05
     PlyGetAllChk	2.4392489999832e-05
 
-The Code: [files/finding_players.lua](files/finding_players.lua)
+El código: [files/finding_players.lua](files/finding_players.lua)
 
 
 
 # Hashes (MD5, SHA1, SHA256)
 
-TL;DR: As expected, the more uniqueness you need the longer it takes to calculate it. This means MD5 is the fastest but has a higher probability of colissions than the slower SHA256.
+TL;DR: Como era de esperar, cuanta más unicidad necesites, más tiempo tomará calcularlo. Esto significa que MD5 es el más rápido pero tiene mayor probabilidad de colisiones que el más lento SHA256.
 
-CRC32 and Base64 are just in there as comparisons. They are not a "good hash algorithm" in the same category as e.g. MD5.  
-Every function tested is defined in C and not in LUA. (According to `debug.getinfo`'s short_src)
+CRC32 y Base64 están incluidos solo como comparación. No son "buenos algoritmos de hash" en la misma categoría que MD5 por ejemplo.  
+Cada función probada está definida en C y no en LUA (según short_src de `debug.getinfo`).
 
-Result:
+Resultado:
 
-    --- Benchmark complete
-    On Server
-    reps	10	rounds	10000
+    --- Benchmark completado
+    En Servidor
+    repeticiones	10	vueltas	10000
     CRC32	4.5670400035306e-07
     MD5	    2.5526380002202e-06
     SHA1	3.5287520001384e-06
     SHA256	7.7691459993503e-06
     Base64	4.1977299973951e-07
 
-The Code: [files/hashes.lua](files/hashes.lua)
+El código: [files/hashes.lua](files/hashes.lua)
 
 
 
-# Is looking at each other comparison
+# Comparación de "se están mirando"
 
-TL;DR: Using the distance between normalized vectors of players viewing direction is the fastest method.
+TL;DR: Usar la distancia entre vectores normalizados de la dirección de visión de los jugadores es el método más rápido.
 
-The question is: How do you calculate "Do these 2 players see each other on their screen right now?" the fastest?  
-This was a problem for a gameplay mechanic which needed to be calculated efficiently to not cause any lag.
+La pregunta es: ¿Cómo calcular de manera más eficiente "¿Están estos 2 jugadores viéndose mutuamente en sus pantallas ahora mismo?"  
+Esto fue un problema para una mecánica de juego que necesitaba calcularse eficientemente para no causar lag.
 
-Result:
+Resultado:
 
-    --- Benchmark complete
-    On Server
-    reps	5	rounds	100
+    --- Benchmark completado
+    En Servidor
+    repeticiones    5   vueltas  100
     AngleBetweenVectorsManual     	1.1895999687113e-06
     AngleBetweenYawOnly           	6.7819999458152e-07
     WikisLookingAtVecDotFunction	1.0634000118444e-06
@@ -589,111 +588,111 @@ Result:
     DistanceBetweenNormVecAuto	    1.0834000095201e-06
     DistanceBetweenAimVectors     	8.4879999485565e-07
 
-The fastest way is to use the `ply:GetAimVector()` of both players, negate one of those vectors and check the distance between them.
+La forma más rápida es usar `ply:GetAimVector()` de ambos jugadores, negar uno de esos vectores y verificar la distancia entre ellos.
 
-## Detailed explanation
+## Explicación detallada
 
-The default problem that many know is: Do these 2 vectors point in the same direction.  
-This problem is similar to ours: Do these 2 players look at each other.  
-The main difference is: One of the vectors is reversed.
+El problema por defecto que muchos conocen es: ¿Apuntan estos 2 vectores en la misma dirección?  
+Este problema es similar al nuestro: ¿Se están mirando estos 2 jugadores?  
+La diferencia principal es: Uno de los vectores está invertido.
 
-This means we just have to reverse one of the 2 vectors and then we can use the standard mathematical formulas to calculate the "default problem" I mentioned above.  
-The slowdown while calculating this comes from using `math.acos` (arc cos) in the official formula. You need this to calculate the vector from the vector dot product formula.  
+Esto significa que solo necesitamos invertir uno de los 2 vectores y luego podemos usar las fórmulas matemáticas estándar para calcular el "problema por defecto" mencionado anteriormente.  
+La ralentización al calcular esto viene del uso de `math.acos` (arco coseno) en la fórmula oficial. Necesitas esto para calcular el vector desde la fórmula del producto punto.
 
-An easier way is to simply use the distance between the 2 AimVectors. `GetAimVector` returns a normalized Vector which always has a length of 1. This means the maximum distance between the 2 vectors is `2` (if the vectors look in exactly the opposite direction) and the minimum is `0` (if the vectors look directly at each other). This makes it faster than all the other methods because you skip an angle calculation and just compare the distance directly.
+Una forma más fácil es simplemente usar la distancia entre los 2 AimVectors. `GetAimVector` devuelve un Vector normalizado que siempre tiene longitud 1. Esto significa que la distancia máxima entre los 2 vectores es `2` (si los vectores miran en direcciones exactamente opuestas) y el mínimo es `0` (si los vectores se miran directamente). Esto lo hace más rápido que todos los otros métodos porque te saltas un cálculo de ángulo y solo comparas la distancia directamente.
 
 
-The Code: [files/looking_at_each_other.lua](files/looking_at_each_other.lua)
+El código: [files/looking_at_each_other.lua](files/looking_at_each_other.lua)
 
 
 
 # for v in plys hook.Run vs hook.Run plys
 
-TL;DR: It is faster to call a hook once with all players looping inside than to loop through players and calling a hook on each one by one.
+TL;DR: Es más rápido llamar un hook una vez con todos los jugadores iterando dentro, que iterar a través de los jugadores y llamar un hook para cada uno individualmente.
 
-This is a comparison between:
+Esta es una comparación entre:
 
- - Calling a hook for every player
- - Calling a hook with a list of every player
+ - Llamar un hook por cada jugador
+ - Llamar un hook con una lista de todos los jugadores
 
-Result:
+Resultado:
 
-    --- Benchmark complete
-    On Server
-    reps	10	rounds	10000
+    --- Benchmark completado
+    En Servidor
+    repeticiones    10  vueltas  10000
     single	9.2695600087609e-07
     many  	2.602249987649e-07
 
-The Code: [files/hook_many_vs_hook_once.lua](files/hook_many_vs_hook_once.lua)
+El código: [files/hook_many_vs_hook_once.lua](files/hook_many_vs_hook_once.lua)
 
 
 
-# DarkRP's fn vs normal lua
+# fn de DarkRP vs lua normal
 
-TL;DR: DarkRP's fn library is (most of the time) slower and more difficult to understand than simple lua code.
+TL;DR: La librería fn de DarkRP es (la mayoría de veces) más lenta y difícil de entender que código lua simple.
 
-This is a comparison between 2 functions that do the same but are written completely different.  
-Please look at the Code to see exactly what the 2 tested codepieces were.
+Esta es una comparación entre 2 funciones que hacen lo mismo pero están escritas de forma completamente diferente.  
+Por favor revisa el código para ver exactamente qué fragmentos fueron probados.
 
-Result:
+Resultado:
 
-    --- Benchmark complete
-    On Server
-    reps	10	rounds	1000
+    --- Benchmark completado
+    En Servidor
+    repeticiones    10  vueltas  1000
     darkrp  7.9022700008863e-06 (0.0000079022700008863)
     default	8.2877000014605e-07 (0.00000082877000014605)
 
-Not only is DarkRP's fn code more difficult to read but it is up to 10 times slower than a simple chain of functions that do the same.
+No solo el código fn de DarkRP es más difícil de leer, sino que puede ser hasta 10 veces más lento que una simple cadena de funciones que hacen lo mismo.
 
-The Code: [files/darkrp_fn_vs_standard_lua.lua](files/darkrp_fn_vs_standard_lua.lua)
+El código: [files/darkrp_fn_vs_standard_lua.lua](files/darkrp_fn_vs_standard_lua.lua)
 
 
 
 # surface.DrawRect vs draw.RoundedBox
 
-TL;DR: It is very slightly faster to use surface.DrawRect instead of draw.RoundedBox.  
-It should not be important for performance though as draw.RoundedBox also supports round edges and is simpler to read and write.
+TL;DR: Es ligeramente más rápido usar surface.DrawRect en lugar de draw.RoundedBox.  
+Sin embargo, no debería ser importante para el rendimiento ya que draw.RoundedBox también soporta bordes redondeados y es más simple de leer y escribir.
 
     surface.DrawRect:   7.4859800010245e-06
     draw.RoundedBox:    8.335099999681e-06
 
-The Code: [files/surface_vs_draw_box.lua](files/surface_vs_draw_box.lua)
+El código: [files/surface_vs_draw_box.lua](files/surface_vs_draw_box.lua)
 
 
 
-# surface.SetDrawColor object vs rgb split
+# surface.SetDrawColor: objeto vs valores separados
 
-TL;DR: It is faster to call SetDrawColor with the rgb colors split up than if you were to use a Color object.  
+TL;DR: Es más rápido llamar a SetDrawColor con los valores RGB separados que usar un objeto Color.
 
-You can use the SetDrawColor function in 2 ways:
+Puedes usar la función SetDrawColor de 2 formas:
 
  - surface.SetDrawColor(color_white)
  - surface.SetDrawColor(255,255,255)
 
-This is a comparison between these 2 methods. "Full" means passing the color object and "Split" means passing 3 numbers (rgb) to the function.
+Esta es una comparación entre estos 2 métodos. "Full" significa pasar el objeto Color y "Split" significa pasar los 3 valores numéricos (RGB) a la función.
 
-    --- Benchmark complete
-    On Client
-    reps	10	rounds	10000
+    --- Benchmark completado
+    En Cliente
+    repeticiones	10  vueltas	10000
     SetColorFull	6.0781200035763e-07
     SetColorSplit	1.1340800017479e-07
 
-The Code: [files/setdrawcolor_comparison.lua](files/setdrawcolor_comparison.lua)
+El código: [files/setdrawcolor_comparison.lua](files/setdrawcolor_comparison.lua)
 
 
 
-# table creation assignments vs index
+# Creación de tablas: asignaciones vs índice
 
-TL;DR: It is faster to assign all your variables in a table in the opening brackets.
+TL;DR: Es más rápido asignar todas las variables de una tabla dentro de los corchetes iniciales.
 
-I see 2 different ways of initializing tables in code nowadays.  
-The first simply being
+Actualmente veo 2 formas diferentes de inicializar tablas en el código.  
+La primera es simplemente:
 ```lua
 local tab = {}
 tab.name = "Test"
 tab.money = 9
 ```
-and the second being
+y la segunda es:
 ```lua
 local tab = {
     name = "Test",
@@ -701,31 +700,31 @@ local tab = {
 }
 ```
 
-This is a comparison of both:
+Esta es una comparación de ambas:
 
-    --- Benchmark complete
-    On Server
-    reps	10	rounds	10000
+    --- Benchmark completado
+    En Servidor
+    repeticiones	10	vueltas	10000
     table = { x = y,	4.5506299968565e-07
     table.x = y      	6.2055800030748e-07
 
-As you can see, it is faster if you create the table with the data already inside.
+Como se puede ver, es más rápido si creas la tabla con los datos ya incluidos.
 
-The Code: [files/table_assignments.lua](files/table_assignments.lua)
+El código: [files/table_assignments.lua](files/table_assignments.lua)
 
 
 
 # print vs Msg
 
-TL;DR: MsgN and Msg are faster than `print`. Msg is only a bit faster than MsgN, because it doesn't append a newline at the end.
+TL;DR: MsgN y Msg son más rápidos que `print`. Msg es solo un poco más rápido que MsgN, porque no añade un salto de línea al final.
 
-The test simply prints messages by using Msg, MsgN and print and checks the time taken.
+La prueba simplemente imprime mensajes usando Msg, MsgN y print, y mide el tiempo tomado.
 
-Result:
+Resultado:
 
-    --- Benchmark complete
-    reps	90	rounds	10
-    On Server
+    --- Benchmark completado
+    repeticiones	90	vueltas	10
+    En Servidor
     Msg	            1.9603333061645e-06
     print	        3.1246666549123e-06
     MsgN	        2.0377778006756e-06
@@ -736,159 +735,159 @@ Result:
     
     MsgN vars+tab	3.3575555587757e-06
 
-The test is split into 2 sections: The first one where we only print a single string and the second one where we print varargs of 2 strings and 1 number.  
-As you can see, print is always the slowest.  
-The last benchmark is using MsgN with tabs to immitate what the print function does, and it is still faster than using print directly.
+La prueba está dividida en 2 secciones: La primera donde solo imprimimos un string y la segunda donde imprimimos múltiples argumentos (2 strings y 1 número).  
+Como se puede ver, print es siempre el más lento.  
+El último benchmark usa MsgN con tabulaciones para imitar lo que hace la función print, y aún así es más rápido que usar print directamente.
 
-The Code: [files/print_vs_msgn.lua](files/print_vs_msgn.lua)
+El código: [files/print_vs_msgn.lua](files/print_vs_msgn.lua)
 
 
 
-# Multiplication vs Division
+# Multiplicación vs División
 
-TL;DR: In Garry's Mod it is not faster to calculate x * 0.5 than x / 2.
-BUT: It is faster to multiply instead of divide in LUA5.3.
+TL;DR: En Garry's Mod no es más rápido calcular x * 0.5 que x / 2.
+PERO: Es más rápido multiplicar que dividir en LUA5.3.
 
-The result (average of 100 rounds with 1000000 calculations each):
+Resultado (promedio de 100 rondas con 1,000,000 de cálculos cada una):
 
     GMOD SERVERSIDE CONSOLE
-    Multiplication:   0.00081622600000003
-    Division:         0.00081775100000215
+    Multiplicación:   0.00081622600000003
+    División:         0.00081775100000215
     LUA5.3 CONSOLE
-    Multiplication:   0.01865942
-    Division:         0.02342666
+    Multiplicación:   0.01865942
+    División:         0.02342666
 
-The Code: [files/multiplication_vs_division.lua](files/multiplication_vs_division.lua)
+El código: [files/multiplication_vs_division.lua](files/multiplication_vs_division.lua)
 
 
 
-# math.Clamp vs math.min and math.max
+# math.Clamp vs math.min y math.max
 
-TL;DR: It is a very tiny bit faster to use math.min in combination with math.max instead of math.Clamp, but the difference is negligible.
+TL;DR: Es mínimamente más rápido usar math.min en combinación con math.max en lugar de math.Clamp, pero la diferencia es insignificante.
 
-Result:
+Resultado:
 
-    --- Benchmark complete
-    On Server
-    reps	20	rounds	50000
+    --- Benchmark completado
+    En Servidor
+    repeticiones	20	vueltas	50000
     clamp  	6.9868600001882e-08
     max/min	6.806609987666e-08
-    --- Benchmark complete
-    On Client
-    reps	20	rounds	50000
+    --- Benchmark completado
+    En Cliente
+    repeticiones	20	vueltas	50000
     clamp  	6.9836399990663e-08
     max/min	6.7090800087044e-08
 
-The Code: [files/math_clamp.lua](files/math_clamp.lua)
+El código: [files/math_clamp.lua](files/math_clamp.lua)
 
 
 
-# Vector:Dot(Vector) overwrite
+# Sobreescritura de Vector:Dot(Vector)
 
-TL;DR: It is not faster to overwrite and implement the vector dot calculation in LUA.
+TL;DR: No es más rápido sobreescribir e implementar el cálculo del producto punto de vectores en LUA.
 
-Result:
+Resultado:
 
-    --- Benchmark complete
-    On Server
-    reps	20	rounds	30000
+    --- Benchmark completado
+    En Servidor
+    repeticiones	20	vueltas	30000
     vec:Dot old	1.2875416667678e-07
     vec:Dot new	5.2033999999855e-07
 
-The Code: [files/vector_dot_overwrite.lua](files/vector_dot_overwrite.lua)
+El código: [files/vector_dot_overwrite.lua](files/vector_dot_overwrite.lua)
 
 
 
-# Vector:Normalize() overwrite
+# Sobreescritura de Vector:Normalize()
 
-TL;DR: It is not faster to overwrite and implement the vector Normalize calculation in LUA.
+TL;DR: No es más rápido sobreescribir e implementar el cálculo de normalización de vectores en LUA.
 
-Result:
+Resultado:
 
-    --- Benchmark complete
-    On Server
-    reps	20	rounds	30000
+    --- Benchmark completado
+    En Servidor
+    repeticiones	20	vueltas	30000
     vec:Normalize old	1.1955383335495e-07
     vec:Normalize new	5.1291399999911e-07
 
-The Code: [files/vector_normalize_overwrite.lua](files/vector_normalize_overwrite.lua)
+El código: [files/vector_normalize_overwrite.lua](files/vector_normalize_overwrite.lua)
 
 
 
-# Vector:Length() overwrite
+# Sobreescritura de Vector:Length()
 
-TL;DR: It is not faster to overwrite and implement the vector Length calculation in LUA.
+TL;DR: No es más rápido sobreescribir e implementar el cálculo de longitud de vectores en LUA.
 
-Result:
+Resultado:
 
-    --- Benchmark complete
-    On Server
-    reps	20	rounds	30000
+    --- Benchmark completado
+    En Servidor
+    repeticiones	20	vueltas	30000
     vec:Length old	1.1400050000068e-07
     vec:Length new	3.8188000000545e-07
 
-The Code: [files/vector_length_overwrite.lua](files/vector_length_overwrite.lua)
+El código: [files/vector_length_overwrite.lua](files/vector_length_overwrite.lua)
 
 
 
-# math.Round overwrite
+# Sobreescritura de math.Round
 
-TL;DR: It is a tiny bit faster to overwrite and implement the math.Round calculation in LUA.
+TL;DR: Es ligeramente más rápido sobreescribir e implementar el cálculo de math.Round en LUA.
 
-Result:
+Resultado:
 
-    --- Benchmark complete
-    On Server
-    reps	20	rounds	30000
+    --- Benchmark completado
+    En Servidor
+    repeticiones	20	vueltas	30000
     math.Round old	7.1794499987448e-08
     math.Round new	6.0206499994801e-08
 
-The Code: [files/math_round_overwrite.lua](files/math_round_overwrite.lua)
+El código: [files/math_round_overwrite.lua](files/math_round_overwrite.lua)
 
 
 
-# Local vs Global variable speed
+# Velocidad de variables locales vs globales
 
-TL;DR: It is a little itsy-bitsy bit faster to make all variables local in Garry's Mod. (14% in this example)
+TL;DR: Es un poquito más rápido hacer todas las variables locales en Garry's Mod (14% en este ejemplo).
 
-The result (average of 100 rounds with 10000 calculations each):
+Resultado (promedio de 100 rondas con 10000 cálculos cada una):
 
     GMOD SERVERSIDE CONSOLE
-    global math.sin:      0.0000059390000023996 (5.9390000023996e-06)
-    local math.sin:       0.0000056840000024749 (5.6840000024749e-06)
+    math.sin global:     0.0000059390000023996 (5.9390000023996e-06)
+    math.sin local:      0.0000056840000024749 (5.6840000024749e-06)
     LUA5.3 CONSOLE
-    global math.sin:      0.00057612
-    local math.sin:       0.00049858
+    math.sin global:     0.00057612
+    math.sin local:      0.00049858
 
-The Code: [files/local_vs_global.lua](files/local_vs_global.lua)
+El código: [files/local_vs_global.lua](files/local_vs_global.lua)
 
 
 
-# Caching GetConVar
+# Almacenamiento en caché de GetConVar
 
-TL;DR: It is not faster to cache ConVars in LUA.
+TL;DR: No es más rápido almacenar en caché los ConVars en LUA.
 
-The wiki page states that the GetConVar function "... caches the result in Lua for quicker lookups.", so caching the result again won't make it that faster.
+La página del wiki indica que la función GetConVar "...almacena en caché el resultado en Lua para búsquedas más rápidas", por lo que volver a almacenar el resultado no lo hará más rápido.
 
-Result:
+Resultado:
 
-    --- Benchmark complete
-    On Server
-    reps	20	rounds	1000
-    UnCached	2.0708000000838e-07
-    Cached  	2.1247999993221e-07
+    --- Benchmark completado
+    En Servidor
+    repeticiones	20	vueltas	1000
+    Sin caché	2.0708000000838e-07
+    Con caché  	2.1247999993221e-07
 
-The Code: [files/getconvar_cache.lua](files/getconvar_cache.lua)
+El código: [files/getconvar_cache.lua](files/getconvar_cache.lua)
 
 
 
 # x^2 vs x*x
 
-This was tested with the inbuilt math.pow function and also the default power-of operator.
+Esta prueba compara la función math.pow incorporada con el operador de potencia estándar.
 
-TL;DR: Using the "roof" operator is slightly faster in gmod. The speed is the same in Lua5.4.
+TL;DR: Usar el operador "^" es ligeramente más rápido en GMod. La velocidad es igual en Lua5.4.
 
-The result (average of 100 rounds with 10000 calculations each):
+Resultado (promedio de 100 rondas con 10000 cálculos cada una):
 
     GMOD SERVERSIDE CONSOLE
     x^2 math.pow:  4.0210000111074e-06
@@ -899,15 +898,15 @@ The result (average of 100 rounds with 10000 calculations each):
     x^2 ^:         0.00015625
     x*x:           0.00015625
 
-The Code: [files/x_squared_vs_x_times.lua](files/x_squared_vs_x_times.lua)
+El código: [files/x_squared_vs_x_times.lua](files/x_squared_vs_x_times.lua)
 
 
 
 # while vs for
 
-TL;DR: A for loop is way faster than while.
+TL;DR: Un bucle for es significativamente más rápido que while.
 
-The result (100x 10000):
+Resultado (100x 10000 iteraciones):
 
     GMOD SERVERSIDE CONSOLE
     while:    0.00000957507999874 (9.57507999874e-06)
@@ -916,179 +915,179 @@ The result (100x 10000):
     while:    0.00015975869999999
     for:      0.000092178400000006 (9.2178400000006e-05)
 
-The Code: [files/while_vs_for.lua](files/while_vs_for.lua)
+El código: [files/while_vs_for.lua](files/while_vs_for.lua)
 
 
 
-# local Color() vs Color()
+# Color() local vs redefinición
 
-TL;DR: Defining the color once is faster than using Color() in a loop.
+TL;DR: Definir el color una vez es más rápido que usar Color() repetidamente en un bucle.
 
-The result (1000x in SysTime() time taken):
+Resultado (1000 iteraciones medido con SysTime()):
 
     Local:     0.0000070583999997496 (7.0583999997496e-06)
-    Non-Local: 0.0000091475999998067 (9.1475999998067e-06)
+    No-Local: 0.0000091475999998067 (9.1475999998067e-06)
 
-The Code: [files/local_color_vs_redefining.lua](files/local_color_vs_redefining.lua)
+El código: [files/local_color_vs_redefining.lua](files/local_color_vs_redefining.lua)
 
 
 
-# Global variables slow down
+# Impacto de variables globales
 
-TL;DR: Creating a lot of global variables neither slows down the game nor creates any noticable impact on performance.
+TL;DR: Crear muchas variables globales no ralentiza el juego ni tiene un impacto notable en el rendimiento.
 
-I heard from multiple sources that "creating many global variables is bad".  
-I tested this by creating 10.000 global variables and observing the game afterwards. An example with the runtime of 10.000 math function calls:
+Escuché de múltiples fuentes que "crear muchas variables globales es malo".  
+Probé esto creando 10,000 variables globales y observando el juego después. Un ejemplo con el tiempo de ejecución de 10,000 llamadas a funciones matemáticas:
 
-    Time    _G-count    time taken
-    Before	3133        0.00044090000005781
-    After	13144       0.00043160000018361
+    Tiempo    Conteo _G    Tiempo tomado
+    Antes	3133        0.00044090000005781
+    Después	13144       0.00043160000018361
 
-The FProfiler statistics and general gameplay feel didn't change either.  
-For more details on the test (or if you want to verify it yourself) check out my script I used:  
+Las estadísticas de FProfiler y la sensación general del juego no cambiaron.  
+Para más detalles sobre la prueba (o si quieres verificarlo tú mismo) revisa el script que usé:  
 [files/global_variables.lua](files/global_variables.lua)
 
 
 
-# table.Count vs \#
+# table.Count vs operador #
 
-TL;DR: It is better to always use the `#` operator instead of table.Count for sequential tables.
+TL;DR: Es mejor usar siempre el operador `#` en lugar de table.Count para tablas secuenciales.
 
-This comparison only works on sequential (or numerical) tables. These are tables that have a numerical, rising number as a key, in other languages you would call this "list" or array.
+Esta comparación solo funciona en tablas secuenciales (o numéricas). Estas son tablas que tienen una clave numérica ascendente, en otros lenguajes se les llamaría "lista" o array.
 
-Table.count would always be used if you want to count a string-index table (also called dictionary or map), but in cases like this both can be used.
+Table.Count siempre debería usarse para contar tablas indexadas por strings (también llamadas diccionarios o mapas), pero en casos como este ambos pueden usarse.
 
-Result:
+Resultado:
 
-    # Table size: 1000
-    Hashtag: 6.2949998141448e-08
-    TbCount: 1.5430600009495e-06
-    # Table size: 10
-    Hashtag: 4.4980000029682e-08
-    TbCount: 9.0410000939301e-08
+    # Tamaño de tabla: 1000
+    Operador #: 6.2949998141448e-08
+    table.Count: 1.5430600009495e-06
+    # Tamaño de tabla: 10
+    Operador #: 4.4980000029682e-08
+    table.Count: 9.0410000939301e-08
 
-As you can see above, the table.Count method is getting slower the larger the table becomes. This is because it loops through all the elements in the table and counts them, according to an old edit from the gmod wiki.
+Como se puede ver arriba, table.Count se vuelve más lento cuanto más grande es la tabla. Esto es porque recorre todos los elementos de la tabla y los cuenta, según una edición antigua de la wiki de gmod.
 
-The Code: [files/table_count_vs_hashtag.lua](files/table_count_vs_hashtag.lua)
+El código: [files/table_count_vs_hashtag.lua](files/table_count_vs_hashtag.lua)
 
 
 
-# table.Random overwrite
+# Sobreescritura de table.Random
 
-TL;DR: It is faster to randomly generate an index of a sequential table and get a random value this way instead of using table.Random().
+TL;DR: Es más rápido generar un índice aleatorio de una tabla secuencial y obtener un valor aleatorio de esta manera en lugar de usar table.Random().
 
-Result:
+Resultado:
 
-    --- Benchmark complete
-    On Server
-    reps	20	rounds	10000
+    --- Benchmark completado
+    En Servidor
+    repeticiones    20  vueltas  10000
     small old	4.6385350004698e-07
     small new	1.2625500000013e-07
     big old	    3.1202909999735e-06
     big new	    1.2906200004807e-07
 
-The Code: [files/table_random_overwrite.lua](files/table_random_overwrite.lua)
+El código: [files/table_random_overwrite.lua](files/table_random_overwrite.lua)
 
 
 
-# table.Count overwrite
+# Sobreescritura de table.Count
 
-TL;DR: It is not faster to overwrite the table.Count function and count the table yourself in LUA.
+TL;DR: No es más rápido sobreescribir la función table.Count y contar la tabla manualmente en LUA.
 
-Result:
+Resultado:
 
-    --- Benchmark complete
-    On Server
-    reps	20	rounds	10000
+    --- Benchmark completado
+    En Servidor
+    repeticiones    20  vueltas  10000
     count small old	2.7576250000664e-07
     count small new	2.6563899996773e-07
     count big old	1.8296299999935e-06
     count big new	1.8260360000758e-06
 
-The Code: [files/table_count_overwrite.lua](files/table_count_overwrite.lua)
+El código: [files/table_count_overwrite.lua](files/table_count_overwrite.lua)
 
 
 
-# file.Write overwrite
+# Sobreescritura de file.Write
 
-TL;DR: It is not faster to overwrite the file.Write function to use lower level lua functions to write files.
+TL;DR: No es más rápido sobreescribir la función file.Write para usar funciones de bajo nivel de Lua para escribir archivos.
 
-Result:
+Resultado:
 
-    --- Benchmark complete
-    On Server
-    reps	20	rounds	100
+    --- Benchmark completado
+    En Servidor
+    repeticiones	20  vueltas	100
     write old	0.00076962965000047
     write new	0.00079238309999975
 
-The Code: [files/file_write_overwrite.lua](files/file_write_overwrite.lua)
+El código: [files/file_write_overwrite.lua](files/file_write_overwrite.lua)
 
 
 
 # ply.x vs tab[ply][x]
 
-TL;DR: It is faster to get variables from a table than from the ply object. Setting a variable has nearly the same speed though, only getting the variable is slower on ply.
+TL;DR: Es más rápido obtener variables de una tabla que del objeto ply. Establecer una variable tiene casi la misma velocidad, solo obtenerla es más lento en ply.
 
-I and many others use code like `ply.lastSpawned = CurTime()`. This is quite easy to use and understand, but in performance aspects it is slower than using a table. An example with a table would be `tab[ply]["lastSpawned"] = CurTime()`.  
-This is because reading this variable from a player uses a (slower) __index method. If you ever used FProfiler then you would probably have seen this "metamethod __index player" function near the top of "most runtime in ms".
+Muchos usamos código como `ply.lastSpawned = CurTime()`. Esto es fácil de usar y entender, pero en términos de rendimiento es más lento que usar una tabla. Un ejemplo con tabla sería `tab[ply]["lastSpawned"] = CurTime()`.  
+Esto se debe a que leer esta variable de un jugador usa un método __index más lento. Si has usado FProfiler, probablemente hayas visto esta función "metamethod __index player" cerca de la parte superior de "most runtime in ms".
 
-I tested this by setting and getting random numbers with both methods 10.000 times, and I ran this 1000 times and calculated the average time taken. Result:
+Probé esto estableciendo y obteniendo números aleatorios con ambos métodos 10,000 veces, ejecutando esto 1000 veces y calculando el tiempo promedio. Resultado:
 
     ply:	0.0033284901999953
     tab:	0.0016247142000013
 
-As you can see, it is quite faster (by 2x) with a table.  
-Using a table also has its downsides, like having to clean it up regularly to avoid ram leaks and having to check 2 table indexes each time you want to verify it.  
-Source code: [files/ply_vs_table_index.lua](files/ply_vs_table_index.lua)
+Como se puede ver, es bastante más rápido (2x) con una tabla.  
+Usar una tabla también tiene desventajas, como tener que limpiarla regularmente para evitar fugas de memoria y tener que verificar 2 índices de tabla cada vez que quieras verificarlo.  
+Código fuente: [files/ply_vs_table_index.lua](files/ply_vs_table_index.lua)
 
 
 
 # MySQL vs SQLite
 
-For the full documentation please look at [https://shira.at/gmod/mysql_sqlite.html](https://shira.at/gmod/mysql_sqlite.html).  
-Setup: MariaDB on Debian 10 installed on the same server as the Garry's Mod Server. Tested with DarkRP's MySQL functions and the mysqloo module.  
+Para la documentación completa visita [https://shira.at/gmod/mysql_sqlite.html](https://shira.at/gmod/mysql_sqlite.html).  
+Configuración: MariaDB en Debian 10 instalado en el mismo servidor que el servidor de Garry's Mod. Probado con funciones MySQL de DarkRP y el módulo mysqloo.  
 
-The time is measured from first requesting the data until we can use the data.  
+El tiempo se mide desde la primera solicitud de datos hasta que podemos usar los datos.  
 
-Summary: MySQL is slower in comparison to SQLite. It needs an external connection and needs to wait for request/response delays either via network or via internal linux sockets. It's great for synchronisation of multiple servers, but it's not a "must-have" for servers.
+Resumen: MySQL es más lento en comparación con SQLite. Necesita una conexión externa y debe esperar retrasos de solicitud/respuesta ya sea a través de red o sockets internos de Linux. Es excelente para sincronización de múltiples servidores, pero no es un "must-have" para servidores individuales.
 
-## Query Delay Comparison
+## Comparación de retraso en consultas
 
-To get the delay for a query without read or write operation we can query `SELECT 1+1`.
+Para obtener el retraso de una consulta sin operación de lectura/escritura podemos consultar `SELECT 1+1`.
 
-Result:
+Resultado:
 
-    --First Test
-    SQLite   ResponseTime:   0.000045883003622293s
-    DRPMySQL ResponseTime:   0.020215623022523s
-    --Second Test
-    SQLite   ResponseTime:   0.000027909001801163s
-    DRPMySQL ResponseTime:   0.049109992978629s
+    --Primera prueba
+    SQLite   TiempoRespuesta:   0.000045883003622293s
+    DRPMySQL TiempoRespuesta:   0.020215623022523s
+    --Segunda prueba
+    SQLite   TiempoRespuesta:   0.000027909001801163s
+    DRPMySQL TiempoRespuesta:   0.049109992978629s
 
-## Read and Write Comparison
+## Comparación de Lectura y Escritura
 
-Query: `SELECT rpname FROM darkrp_player WHERE uid = 76561198071737444`
+Consulta: `SELECT rpname FROM darkrp_player WHERE uid = 76561198071737444`
 
-Result:
+Resultado:
 
-    SQLite   Read Time:   0.00016302999938489s
-    DRPMySQL Read Time:   0.048014674001024s
+    SQLite   TiempoLectura:   0.00016302999938489s
+    DRPMySQL TiempoLectura:   0.048014674001024s
 
-Query: `INSERT INTO darkrp_player VALUES(123123,'Test User',1,2)`
+Consulta: `INSERT INTO darkrp_player VALUES(123123,'Test User',1,2)`
 
-Result:
+Resultado:
 
-    SQLite   Write Time:   0.00020395400133566s
-    DRPMySQL Write Time:   0.06270497100013s
+    SQLite   TiempoEscritura:   0.00020395400133566s
+    DRPMySQL TiempoEscritura:   0.06270497100013s
 
-## 1000 inserts (Bulk Inserts)
+## 1000 inserciones (Inserciones masivas)
 
-DarkRP's SQLite method uses sql.Begin and sql.Commit for SQLite based bulk imports. This makes it way faster than doing 1000 inserts after each other.  
+El método SQLite de DarkRP usa sql.Begin y sql.Commit para importaciones masivas. Esto lo hace mucho más rápido que hacer 1000 inserciones una tras otra.  
 
-DarkRP's MySQL method simply puts the queries into a table and sents them one after the other to the mysql-server. This is way slower, as the time neede is simply the time one insert takes times 1000.
+El método MySQL de DarkRP simplemente pone las consultas en una tabla y las envía una tras otra al servidor mysql. Esto es mucho más lento, ya que el tiempo necesario es simplemente el tiempo que tarda una inserción multiplicado por 1000.
 
-Result:
+Resultado:
 
-    SQlite   1000 Inserts:     0.004849937000472s
-    DRPMySQL 1000 Inserts:   ~30.000000000000000s (calculated)
+    SQlite   1000 Inserciones:     0.004849937000472s
+    DRPMySQL 1000 Inserciones:   ~30.000000000000000s (calculado)
 
